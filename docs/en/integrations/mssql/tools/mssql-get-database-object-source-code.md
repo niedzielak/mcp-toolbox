@@ -21,9 +21,6 @@ The tool takes the following input parameters:
   retrieve. Allowed values: `all`, `functions`, `tables`, `procedures`, `views`,
   `triggers`, `linked_servers`, `assemblies`. Default: `all`.
 
-## Compatible Sources
-
-{{< compatible-sources others="integrations/cloud-sql-mssql">}}
 
 ## Example
 

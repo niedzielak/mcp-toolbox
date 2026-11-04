@@ -38,7 +38,7 @@ type queryPair struct {
 var objectTypeQueries = map[string]queryPair{
 	"procedures": {
 		full: `	SELECT 
-		QUOTENAME(SCHEMA_NAME(schema_id)) + '.' + QUOTENAME(name), 0
+		CAST(Object_ID AS NVARCHAR(500)), 0
 	FROM 
 		sys.procedures`,
 		namesOnly: `	SELECT 
@@ -48,7 +48,7 @@ var objectTypeQueries = map[string]queryPair{
 	},
 	"views": {
 		full: `	SELECT 
-		QUOTENAME(SCHEMA_NAME(schema_id)) + '.' + QUOTENAME(name), 0
+		CAST(Object_ID AS NVARCHAR(500)), 0
 	FROM 
 		sys.views`,
 		namesOnly: `	SELECT 
@@ -58,7 +58,7 @@ var objectTypeQueries = map[string]queryPair{
 	},
 	"functions": {
 		full: `	SELECT 
-		QUOTENAME(SCHEMA_NAME(schema_id)) + '.' + QUOTENAME(name), 0
+		CAST(Object_ID AS NVARCHAR(500)), 0
 	FROM 
 		sys.objects
 	WHERE type IN ('FN', 'IF', 'TF', 'FS', 'FT')`,
@@ -146,7 +146,7 @@ ELSE
 BEGIN
 -- Create a temporary table to hold procedure names
 CREATE TABLE #SqlResourceList (
-    RowID INT IDENTITY(1,1),
+    RowID INT PRIMARY KEY IDENTITY(1,1),
     ResourceName NVARCHAR(500),
 		ResourceType INT
 );
@@ -170,7 +170,7 @@ BEGIN
 
 	IF @CurrentResourceType = 0
 		BEGIN
-			IF EXISTS (SELECT 1 FROM sys.assembly_modules WHERE object_id = OBJECT_ID(@CurrentResource))
+			IF EXISTS (SELECT 1 FROM sys.assembly_modules WHERE object_id = @CurrentResource)
 				BEGIN
 					PRINT 'CLR Object - ' + @CurrentResource
 					SELECT 
@@ -180,13 +180,14 @@ BEGIN
 						am.assembly_method AS [AssemblyMethod]
 					FROM sys.assembly_modules am
 					INNER JOIN sys.assemblies a ON am.assembly_id = a.assembly_id
-					WHERE am.object_id = OBJECT_ID(@CurrentResource);
+					WHERE am.object_id = @CurrentResource;
 					SELECT '-------------------------------------------------------'
 				END
 			ELSE
 				BEGIN
 					-- Execute sp_helptext for the current stored procedure
-					EXEC sp_helptext @CurrentResource;
+					-- EXEC sp_helptext @CurrentResource;
+					SELECT OBJECT_DEFINITION(@CurrentResource);
 				END
 		END
 	ELSE IF @CurrentResourceType = 2
